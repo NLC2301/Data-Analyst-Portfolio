@@ -1,0 +1,41 @@
+--DAX Measure for the measure selector on the Graphing Tool
+
+
+
+MeasureSelector = 
+IF(
+    NOT(
+        COUNTROWS(Basis)>1
+        ),
+    SWITCH( 
+        TRUE(),
+        VALUES(Basis[Base]) = "12 Month Rolling Basis.",
+           IF(
+                NOT(
+                    COUNTROWS(MeasureSelector)>1
+                    ),
+                SWITCH( 
+                    TRUE(),
+                    VALUES(MeasureSelector[Measures]) = "Total Number of People", [12MRPPL_var] ,
+                    VALUES(MeasureSelector[Measures]) = "Total Number of Forms", [12MRForms_var]  ,
+                    VALUES(MeasureSelector[Measures]) = "Total Number of Juvenile Illegal Miners", [12MRJuv_var]  ,
+                    VALUES(MeasureSelector[Measures]) = "Total Number of Arrested Illegals Miners", [12MRArrests_var] ,
+                    VALUES(MeasureSelector[Measures]) = "Total Number of Illegal Miners/Trespassers", [12MRArtisanal_var] ,
+                BLANK()), "Select a Measure"
+            ),
+        VALUES(Basis[Base]) = "Monthly Basis.", 
+            IF(
+                NOT(
+                    COUNTROWS(MeasureSelector)>1
+                    ),
+                SWITCH( 
+                    TRUE(),
+                    VALUES(MeasureSelector[Measures]) = "Total Number of People", [TotalPeople_var] ,
+                    VALUES(MeasureSelector[Measures]) = "Total Number of Forms", [TotalForms_var] ,
+                    VALUES(MeasureSelector[Measures]) = "Total Number of Juvenile Illegal Miners", [TotalJuv_var]  ,
+                    VALUES(MeasureSelector[Measures]) = "Total Number of Arrested Illegals Miners", [TotalArests_var] ,
+                    VALUES(MeasureSelector[Measures]) = "Total Number of Illegal Miners/Trespassers", [TotalArtisanals_var] ,
+                BLANK()), "Select a Measure"
+                ),
+    BLANK()), "Select an Aggregation Basis"
+    )
