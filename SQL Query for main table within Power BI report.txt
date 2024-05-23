@@ -1,0 +1,90 @@
+--This was one of the main tables featured within the report drawn directly from our SQL Server 
+
+
+
+with Fatalities as (
+select IncidentID,COUNT(IncidentID) as #Fatalities from IncidentPersonsAffected where InjurySeverityID = 4 group by IncidentID
+)
+
+select
+	ti.IncidentID
+	,case
+		when ti.HSEStatusId = 57 then 'Initial Report Filed'
+		when ti.HSEStatusId = 58 then 'Awaiting documents / photos / updates'
+		when ti.HSEStatusId = 59 then 'Closed'
+		when ti.HSEStatusId = 60 then 'Re-opened'
+	end as FormStatus
+	,Ref_No
+	,OccurrenceDescription as [Description]
+	,ti.Latitude
+	,ti.Longitude
+	,coalesce(ti.TotalWorkinghrslost,0) as [Working Hours Lost]
+	,ti.Occurrence_date as [Date]
+	,case
+		when ti.InjuryCategoryType = 2 then 'Not During Working Hours'
+		when ti.InjuryCategoryType = 1 then 'During Working Hours'
+		else 'NA / Not Specified'
+	end as [Injury During working hours? ]
+	,case
+		when ti.IsInjuryOccur = 1 then 'Yes'
+		when ti.IsInjuryOccur= 2 then 'No'
+		when ti.IsInjuryOccur = 4 then 'Unknown'
+		else 'No'
+	end as [Injury?]
+	,case
+		when ti.IsProperyDamange = 1 then 'Yes'
+		when ti.IsProperyDamange= 2 then 'No'
+		when ti.IsProperyDamange = 4 then 'Unknown'
+		else 'No'
+	end as [Damage To Property?]
+	,case
+		when ti.IsNearMiss = 1 then 'Yes'
+		when ti.IsNearMiss= 2 then 'No'
+		when ti.IsNearMiss = 4 then 'Unknown'
+		else 'No'
+	end as [Near Miss?]
+    ,case
+		when ti.IsRequireOfficialGrievance = 1 then 'Yes'
+		when ti.IsRequireOfficialGrievance= 2 then 'No'
+		when ti.IsRequireOfficialGrievance = 4 then 'Unknown'
+		else 'No'
+	end as [Grievance?]
+    ,case
+		when ti.IsIntrusionOnLicenceArea = 1 then 'Yes'
+		when ti.IsIntrusionOnLicenceArea= 2 then 'No'
+		when ti.IsIntrusionOnLicenceArea = 4 then 'Unknown'
+		else 'No'
+	end as [Intrusion on License?]
+	,case
+		when ti.IsOccurrenceinCompany = 0 then 'No'
+		else 'Yes'
+	end as [On Premises]
+	,caf.Company
+	,max(pa.LostTimeInjuryId)as [LostTimeID]
+	,coalesce(sum(cast(pa.IsFatality as int)),0) as [#Juveniles]
+	,coalesce(sum(cast(pa.IsArrested as int)),0)as [#Arrests]
+	,coalesce(sum(cast(pa.IsIllegalMiner as int)),0) as [#IllegalM]
+	,coalesce(f.#Fatalities,0) as [#Fatalities]
+from TrackIncidents as ti
+Left Join IncidentPersonsAffected as pa on ti.IncidentID = pa.IncidentID
+Left Join SupplierDetails as caf on ti.SupplierId = caf.SupplierId
+Left Join SupplierRoles as crm on ti.SupplierId = crm.SupplierId
+left Join Fatalities as f on ti.IncidentID = f.IncidentID
+where ti.Deleted = 0 and crm.RoleId = 70
+group by ti.IncidentID
+	,ti.HSEStatusId
+	,Ref_No
+	,OccurrenceDescription
+	,ti.Latitude
+	,ti.Longitude
+	,ti.TotalWorkinghrslost
+	,ti.Occurrence_date
+	,ti.IsInjuryOccur
+	,ti.IsProperyDamange
+	,ti.IsNearMiss
+	,ti.IsRequireOfficialGrievance
+	,ti.InjuryCategoryType
+	,ti.IsOccurrenceinCompany
+	,caf.Company
+	,f.#Fatalities
+	,ti.IsIntrusionOnLicenceArea
